@@ -103,6 +103,11 @@ export interface AgentConfiguration {
   contactInfo: string;
   dailySpendingLimit: number; // in CR
   autoApproveLimit: number; // in CR
+  // Advanced Capabilities
+  negotiationStrategy: 'none' | 'conservative' | 'balanced' | 'aggressive';
+  autonomousToolUse: boolean; // "Create an agent and let it complete these tasks"
+  autoToolDiscovery: boolean; // "Suggest best options"
+  enabledMCPs: string[]; // List of enabled Model Context Protocols
 }
 
 export interface UserProfile {

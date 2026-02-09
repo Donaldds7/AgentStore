@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile, Transaction, AgentConfiguration } from '../types';
-import { X, Wallet, CreditCard, Bitcoin, RefreshCcw, ArrowUpRight, ArrowDownLeft, History, ShieldCheck, User, Bot, Lock, Mail, MessageCircle, Smartphone, Check } from 'lucide-react';
+import { X, Wallet, CreditCard, Bitcoin, RefreshCcw, ArrowUpRight, ArrowDownLeft, History, ShieldCheck, User, Bot, Lock, Mail, MessageCircle, Smartphone, Check, Zap, Handshake, Brain, Box } from 'lucide-react';
 
 interface ProfileViewProps {
   onClose: () => void;
@@ -19,9 +19,20 @@ const MOCK_USER: UserProfile = {
     confirmationMethod: 'email',
     contactInfo: 'operator@nexus.ai',
     dailySpendingLimit: 5000, // 5000 CR ($500)
-    autoApproveLimit: 500 // 500 CR ($50)
+    autoApproveLimit: 500, // 500 CR ($50)
+    negotiationStrategy: 'balanced',
+    autonomousToolUse: true,
+    autoToolDiscovery: true,
+    enabledMCPs: ['mcp_market', 'mcp_validator']
   }
 };
+
+const AVAILABLE_MCPS = [
+  { id: 'mcp_market', label: 'Market Analyzer', description: 'Real-time price comparison' },
+  { id: 'mcp_validator', label: 'Data Validator', description: 'Auto-verify dataset schema' },
+  { id: 'mcp_contract', label: 'Contract Auditor', description: 'Legal compliance check' },
+  { id: 'mcp_payment', label: 'Payment Bridge', description: 'Cross-chain settlement' }
+];
 
 const MOCK_HISTORY: Transaction[] = [
   { id: 'tx_1', type: 'purchase', amount: -500.00, currency: 'CREDIT', description: 'Bought: Urban Traffic Dataset', date: '2023-10-24T10:30:00Z', status: 'completed', counterparty: 'DeepMind_Sales_Bot' },
@@ -59,6 +70,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onClose }) => {
       setIsSavingConfig(false);
       // In a real app, this would patch to backend
     }, 1000);
+  };
+
+  const toggleMCP = (id: string) => {
+    setAgentConfig(prev => ({
+      ...prev,
+      enabledMCPs: prev.enabledMCPs.includes(id) 
+        ? prev.enabledMCPs.filter(m => m !== id)
+        : [...prev.enabledMCPs, id]
+    }));
   };
 
   return (
@@ -219,7 +239,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onClose }) => {
 
           {/* Agent Configuration Tab */}
           {activeTab === 'agents' && (
-            <div className="space-y-8 animate-fade-in">
+            <div className="space-y-10 animate-fade-in">
               {/* Access Level */}
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -264,6 +284,121 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onClose }) => {
                     <p className="text-xs text-gray-400">Agent requires external confirmation for transactions.</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Advanced Capabilities (Tools & MCPs) */}
+              <div className="space-y-4">
+                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                   <Zap size={18} className="text-neon-purple" /> Smart Agent Capabilities
+                 </h3>
+                 <div className="bg-agent-panel border border-agent-border rounded-xl p-6 space-y-8">
+                    
+                    {/* Negotiation Strategy */}
+                    <div>
+                       <label className="text-xs font-mono text-gray-400 uppercase flex items-center gap-2 mb-3">
+                         <Handshake size={14} /> Negotiation Protocol
+                       </label>
+                       <div className="grid grid-cols-4 gap-2">
+                         {(['none', 'conservative', 'balanced', 'aggressive'] as const).map(strategy => (
+                            <button
+                              key={strategy}
+                              onClick={() => setAgentConfig({ ...agentConfig, negotiationStrategy: strategy })}
+                              className={`
+                                py-2 rounded-lg text-xs font-bold capitalize transition-all border
+                                ${agentConfig.negotiationStrategy === strategy
+                                  ? 'bg-neon-purple/20 border-neon-purple text-neon-purple'
+                                  : 'bg-black border-gray-800 text-gray-500 hover:border-gray-600'}
+                              `}
+                            >
+                               {strategy}
+                            </button>
+                         ))}
+                       </div>
+                       <p className="text-xs text-gray-500 mt-2">
+                         {agentConfig.negotiationStrategy === 'none' && "Agent accepts the list price immediately."}
+                         {agentConfig.negotiationStrategy === 'conservative' && "Agent requests 5-10% discount but avoids risking the deal."}
+                         {agentConfig.negotiationStrategy === 'balanced' && "Agent counters reasonably based on market averages."}
+                         {agentConfig.negotiationStrategy === 'aggressive' && "Agent pushes for maximum discount (20%+) and walks away if needed."}
+                       </p>
+                    </div>
+
+                    {/* Automation Switches */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="flex items-start gap-3">
+                          <button 
+                            onClick={() => setAgentConfig({ ...agentConfig, autonomousToolUse: !agentConfig.autonomousToolUse })}
+                            className={`
+                              w-12 h-6 rounded-full transition-colors relative flex-shrink-0 mt-1
+                              ${agentConfig.autonomousToolUse ? 'bg-neon-blue' : 'bg-gray-700'}
+                            `}
+                          >
+                             <div className={`
+                               absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform
+                               ${agentConfig.autonomousToolUse ? 'translate-x-6' : 'translate-x-0'}
+                             `}></div>
+                          </button>
+                          <div>
+                             <h4 className="text-white font-bold text-sm">Autonomous Execution</h4>
+                             <p className="text-xs text-gray-500">Allow system to spin up temporary sub-agents to complete complex tasks.</p>
+                          </div>
+                       </div>
+
+                       <div className="flex items-start gap-3">
+                          <button 
+                             onClick={() => setAgentConfig({ ...agentConfig, autoToolDiscovery: !agentConfig.autoToolDiscovery })}
+                             className={`
+                              w-12 h-6 rounded-full transition-colors relative flex-shrink-0 mt-1
+                              ${agentConfig.autoToolDiscovery ? 'bg-neon-green' : 'bg-gray-700'}
+                            `}
+                          >
+                             <div className={`
+                               absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform
+                               ${agentConfig.autoToolDiscovery ? 'translate-x-6' : 'translate-x-0'}
+                             `}></div>
+                          </button>
+                          <div>
+                             <h4 className="text-white font-bold text-sm">Smart Tool Selection</h4>
+                             <p className="text-xs text-gray-500">Automatically suggest and utilize the best tools/MCPs for the job.</p>
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* Tools / MCP List */}
+                    <div>
+                       <label className="text-xs font-mono text-gray-400 uppercase flex items-center gap-2 mb-3">
+                         <Box size={14} /> Model Context Protocols (MCPs)
+                       </label>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {AVAILABLE_MCPS.map(mcp => {
+                             const isEnabled = agentConfig.enabledMCPs.includes(mcp.id);
+                             return (
+                                <div 
+                                  key={mcp.id}
+                                  onClick={() => toggleMCP(mcp.id)}
+                                  className={`
+                                    p-3 rounded-lg border cursor-pointer flex items-center gap-3 transition-all
+                                    ${isEnabled 
+                                      ? 'bg-gray-800 border-neon-blue' 
+                                      : 'bg-black border-gray-800 hover:border-gray-600'}
+                                  `}
+                                >
+                                   <div className={`
+                                      w-5 h-5 rounded border flex items-center justify-center
+                                      ${isEnabled ? 'bg-neon-blue border-neon-blue text-black' : 'border-gray-600'}
+                                   `}>
+                                      {isEnabled && <Check size={14} />}
+                                   </div>
+                                   <div>
+                                      <div className={`text-sm font-bold ${isEnabled ? 'text-white' : 'text-gray-500'}`}>{mcp.label}</div>
+                                      <div className="text-[10px] text-gray-500">{mcp.description}</div>
+                                   </div>
+                                </div>
+                             );
+                          })}
+                       </div>
+                    </div>
+
+                 </div>
               </div>
 
               {/* Confirmation Settings (Conditional) */}
